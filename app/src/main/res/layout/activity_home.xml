@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".HomeActivity">
+
+    <TextView
+        android:layout_marginTop="30dp"
+        android:id="@+id/connectedbox"
+        android:layout_width="198dp"
+        android:layout_height="wrap_content"
+        android:text="Placeholder"
+        android:textSize="30dp"
+        android:textAlignment="center"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/linear1"
+        android:scrollbars="vertical"
+        />
+
+    <LinearLayout
+        android:id="@+id/linear1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+        <Button
+            android:id="@+id/hostbutt"
+            android:layout_width="wrap_content"
+            android:layout_height="70dp"
+            android:layout_margin="20dp"
+            android:layout_weight="1"
+            android:text="Host"
+
+            />
+
+        <Button
+            android:id="@+id/clientbutt"
+            android:layout_width="wrap_content"
+            android:layout_height="70dp"
+            android:text="Client"
+            android:layout_weight="1"
+
+            android:layout_margin="20dp"
+            />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/mess"
+        android:backgroundTint="@color/colorAccent"
+        android:layout_below="@id/connectedbox"
+        android:layout_marginTop="40dp"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_centerHorizontal="true"
+        android:ems="10"
+        android:inputType="textMultiLine" />
+
+    <Button
+        android:id="@+id/sendmess"
+        android:layout_width="148dp"
+        android:layout_height="65dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/mess"
+        android:text="send"
+        />
+
+</RelativeLayout>
