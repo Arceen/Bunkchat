@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ChatACtivity">
+
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_marginEnd="65dp"
+        android:id="@+id/text"
+        android:layout_marginRight="100dp"
+        android:layout_height="65dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <android.support.design.widget.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="25dp"
+            />
+
+
+
+    </android.support.design.widget.TextInputLayout>
+
+    <ImageView
+        android:id="@+id/emote"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        app:layout_constraintEnd_toEndOf="@id/text"
+        app:srcCompat="@drawable/happy"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="13dp"
+        android:layout_marginBottom="13dp"
+
+        />
+
+    <ImageView
+        android:id="@+id/sendemo"
+        android:layout_width="63dp"
+        android:layout_height="60dp"
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+
+        app:srcCompat="@drawable/sendingicon" />
+
+</android.support.constraint.ConstraintLayout>

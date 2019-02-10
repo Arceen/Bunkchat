@@ -92,8 +92,24 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        Intent cintent = new Intent(this, ChatACtivity.class);
+        startActivity(cintent);
+
+        //Creating our wifimanager object
         wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+        //Creating some objects corresponding to Resources
         message = (EditText) findViewById(R.id.mess);
+        clientbutt = (Button) findViewById(R.id.clientbutt);
+        hostbutt = (Button) findViewById(R.id.hostbutt);
+        sendmessbutt = (Button) findViewById(R.id.sendmess);
+
+        tv = (TextView) findViewById(R.id.connectedbox);
+
+        //To make a textview scrollable
+        tv.setMovementMethod(new ScrollingMovementMethod());
+
+        //All the versions above Marshmellow(API level 23) need to ask for WRITE_SETTINGS permissions exclusively
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             boolean canWrite = Settings.System.canWrite(getApplicationContext());
             if (ContextCompat.checkSelfPermission(getApplicationContext(),
@@ -103,17 +119,20 @@ public class HomeActivity extends AppCompatActivity {
                 intent.setData(Uri.parse("package:" + getApplicationContext().getPackageName()));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
-                Log.d("tag", "comes here " + (ContextCompat.checkSelfPermission(getApplicationContext(),
+                Log.d("address", "comes here " + (ContextCompat.checkSelfPermission(getApplicationContext(),
                         Manifest.permission.WRITE_SETTINGS)
                         == PackageManager.PERMISSION_GRANTED) + " for build version " + Build.VERSION.SDK_INT);
             }
         }
+
+
+        //Check the location permission and asks for it if not already given
         if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED)
                 || (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED))
         {
-            Log.d("wifip2p", "Requesting permissions");
+            Log.d("address", "Requesting permissions");
 
             //Request permission
             ActivityCompat.requestPermissions(this,
@@ -124,13 +143,15 @@ public class HomeActivity extends AppCompatActivity {
 
         }
         else
-            Log.d("wifip2p", "Permissions already granted");
-        clientbutt = (Button) findViewById(R.id.clientbutt);
-        hostbutt = (Button) findViewById(R.id.hostbutt);
-        sendmessbutt = (Button) findViewById(R.id.sendmess);
+            Log.d("address", "Permissions already granted");
+
+
+        //Configuring Click listeners for all our buttons
+
         clientbutt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //Becomes a client and tries to connect to a host
                 startClientThread();
             }
         });
@@ -138,32 +159,31 @@ public class HomeActivity extends AppCompatActivity {
         hostbutt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //Becomes a host
                 startHostThread();
             }
         });
 
+
+        //this needs to be modified
         sendmessbutt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(abletosend){
-                    SendMessAsyncTask sendMessAsyncTask = new SendMessAsyncTask();
-                    sendMessAsyncTask.execute(new String[] {message.getText().toString(),
-                            intToIP(wm.getDhcpInfo().serverAddress), "9809" });
-                }
-                else if(abletorecieve){
 
-                }
+                SendMessAsyncTask sendMessAsyncTask = new SendMessAsyncTask();
+                sendMessAsyncTask.execute(new String[] {message.getText().toString(),
+                        intToIP(wm.getDhcpInfo().serverAddress), "9809" });
+
             }
         });
 
-        tv = (TextView) findViewById(R.id.connectedbox);
-        tv.setMovementMethod(new ScrollingMovementMethod());
-        bReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                wm.getScanResults();
-            }
-        };
+
+//        bReceiver = new BroadcastReceiver() {
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                wm.getScanResults();
+//            }
+//        };
 
     }
 
@@ -175,11 +195,13 @@ public class HomeActivity extends AppCompatActivity {
     private void startHostThread() {
         Thread th = new Thread(new Runnable() {
             public void run() {
-                Log.d("wifip2p", "enables hotspot");
+                Log.d("address", "enables hotspot");
                 wm.setWifiEnabled(false);
                 boolean b = setHotSpot("abc", "12345678");
                 if(b){
-                    abletorecieve = true;
+
+                    //If a hotspot has been created
+                    //Enable the host some way to to show that
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
@@ -187,35 +209,44 @@ public class HomeActivity extends AppCompatActivity {
                             tv.setText("Became a Server");
                         }
                     });
+                    //****  -----Refactor Code (checked)----- ******
+                    //Server works fine
+                    //opens our port
+                    //listening to our connections
+                    Thread hostthread = new Thread(new ServerClass(getApplicationContext(), wm));
+                    hostthread.start();
 
-                    new Thread(new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            try {
-                                ServerSocket socServer = new ServerSocket(9809);
-                                Socket socClient = null;
-                                int cno = 0;
-                                while (true) {
-                                    try {
-                                        Log.d("address", "Waiting on clinet");
-                                        socClient = socServer.accept();
-                                        getClientList(finishScanListener);
-                                        Log.d("address", "Doing a thread for client no " + (++cno));
-                                        ServerAsyncTask serverAsyncTask = new ServerAsyncTask();
-                                        serverAsyncTask.execute(new Socket[]{socClient});
-                                    } catch (Exception e) {
-                                        Log.d("address", ""+e);
-                                    }
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }).start();
+                    //****    Refactoring this part    ****
 
 
+//                    new Thread(new Runnable() {
+//
+//                        @Override
+//                        public void run() {
+//
+//                            try {
+//                                ServerSocket socServer = new ServerSocket(9809);
+//                                Socket socClient = null;
+//                                int cno = 0;
+//                                while (true) {
+//                                    try {
+//                                        Log.d("address", "Waiting on clinet");
+//                                        socClient = socServer.accept();
+//                                        getClientList(finishScanListener);
+//                                        Log.d("address", "Doing a thread for client no " + (++cno));
+//                                        ServerAsyncTask serverAsyncTask = new ServerAsyncTask();
+//                                        serverAsyncTask.execute(new Socket[]{socClient});
+//                                    } catch (Exception e) {
+//                                        Log.d("address", ""+e);
+//                                    }
+//                                }
+//                            } catch (IOException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    }).start();
+
+                // ---- end -----
                 }
 
             }
@@ -226,29 +257,54 @@ public class HomeActivity extends AppCompatActivity {
     private void startClientThread() {
         Thread th = new Thread(new Runnable() {
             public void run() {
-                Log.d("wifip2p", "Became a client");
+                Log.d("address", "Became a client");
                 if(!wm.isWifiEnabled()){
                     wm.setWifiEnabled(true);
                 }
                 boolean b  = connectToHotspot("abc", "12345678");
                 if(b){
+
+                    //Simplest way i know to update the UI thread
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            Log.d("UI thread", "I am the UI thread");
+                            //To make sure client knows that he is being connected
+                            Log.d("address", "I am the UI thread");
                             tv.setText("Connected as a client");
                         }
                     });
-//
+
+
+                    //Forgot why I used these two @_@
+
                     ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
 
+
+
+                    //------------------------------------------------
+                    //This sleep method has a little significance
+
+                    //Some wifi devices are so fast that they connect
+                        //even before our wifimanager gets updated getDhcpInfo().serverAddress
+
+                    //Sleeptime of some arbitrary value makes sure that
+                        //we give it enough time to update all the wifimanager info
+
+                    //This is still up for change
+                    //Have to find a better way to couter this problem
+
                     SystemClock.sleep(4000);
+                    //------------------------------------------------------
 
+                    //****  -----Refactor code(Not checked)---- *****
+                    Thread clientThread = new Thread(new ClientClass(getApplicationContext(), wm));
+                    clientThread.start();
 
-                    ClientAsyncTask clientAST = new ClientAsyncTask();
-                    clientAST.execute(new String[] {intToIP(wm.getDhcpInfo().serverAddress), "9809", "Niloy"+" : "+"lovenot hate" });
+                    //Refactoring this code
+//                    ClientAsyncTask clientAST = new ClientAsyncTask();
+//                    clientAST.execute(new String[] {intToIP(wm.getDhcpInfo().serverAddress), "9809", "Niloy"+" : "+"lovenot hate" });
 
                 }
             }
@@ -256,18 +312,21 @@ public class HomeActivity extends AppCompatActivity {
         th.start();
     }
 
+    //Change this to make user experience better
+    //Currently every screen rotation disrupts the app
+        //and makes it ask for permission(Precisely in API 23)
 
-    /* register the broadcast receiver with the intent values to be matched */
     @Override
     protected void onResume() {
         super.onResume();
     }
-    /* unregister the broadcast receiver */
     @Override
     protected void onPause() {
         super.onPause();
     }
-    // this method help to create hotspot programmatically
+
+
+    // Create a hotspot for our host/server
     public boolean setHotSpot(String SSID, String passWord) {
         boolean apstatus = false;
         WifiConfiguration wifiCon = new WifiConfiguration();
@@ -279,13 +338,14 @@ public class HomeActivity extends AppCompatActivity {
         wifiCon.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
         try
         {
+            //Get the declared method named 'setWifiApEnabled' which has parameters of a WifiConfiguration object and a boolean
             Method setWifiApMethod = wm.getClass().getDeclaredMethod("setWifiApEnabled", WifiConfiguration.class, Boolean.TYPE);
             apstatus=(Boolean) setWifiApMethod.invoke(wm, wifiCon,true);
-            Log.d("wifip2p", "comes here2");
+            Log.d("address", "comes here2");
         }
         catch (Exception e)
         {
-            Log.d("error", "", e);
+            Log.d("address", "", e);
         }
         return apstatus;
 
@@ -295,25 +355,26 @@ public class HomeActivity extends AppCompatActivity {
     // this method help to connect hotspot programmatically 
     public boolean connectToHotspot(String netSSID, String netPass) {
         WifiConfiguration wifiConf = new WifiConfiguration();
-        WifiInfo wifiInfo = wm.getConnectionInfo();
         List<ScanResult> scanResultList = null;
+
+        //use wifimanager to get all the wifi routers/hotspots in the network
         scanResultList = wm.getScanResults();
-            //do something, permission was previously granted; or legacy device
 
-
-        Log.d("wifip2p", "inside connect to hotspot");
+        Log.d("address", "inside connect to hotspot");
         if (wm.isWifiEnabled()) {
             for (ScanResult result : scanResultList) {
 
-                Log.d("wifip2p", ""+result.SSID);
+                Log.d("address", ""+result.SSID);
                 if (result.SSID.equals(netSSID)) {
-                    Log.d("wifip2p", "finds network");
+                    Log.d("address", "finds network");
                    try{
 
                        int netID = -1;
                     String confSSID = "\"" + netSSID + "\"";
                     String confPassword = "\"" + netPass + "\"";
-
+                    //Checks to see if the SSID already has a network id
+                       //-1 if not already configured
+                       //else configured
                     netID = getExistingNetworkId(confSSID, netID);
                     if(netID == -1) {
                         wifiConf.SSID = confSSID;
@@ -328,12 +389,15 @@ public class HomeActivity extends AppCompatActivity {
 
                         wm.saveConfiguration();
                     }
+                    //disconnect the current network
                     wm.disconnect();
+                    //enable the current network with our ID and attempt the connection
                     wm.enableNetwork(netID, true);
+                    //reconnect with our given nid
                     wm.reconnect();
-                    Log.d("error", "finds network");
+                    Log.d("address", "sets network");
                 }catch(Exception e){
-                       Log.d("wifip2p", ""+e);
+                       Log.d("address", ""+e);
                    }
                     return true;
 
@@ -342,12 +406,16 @@ public class HomeActivity extends AppCompatActivity {
         }
         return false;
     }
+
+
+
+    //If the network connection already exists we do not need to create a network id
     private int getExistingNetworkId(String SSID, int netID) {
         List<WifiConfiguration> wifiConfigurationList = wm.getConfiguredNetworks();
         for (WifiConfiguration item : wifiConfigurationList){
-        /*
-          Find if the SSID is in the preconfigured list - if found get netID
-         */
+
+          //see if the SSID is in the preconfigured list(if we find netID)
+
             if (item.SSID != null && item.SSID.equals(SSID)){
 
                 Log.d(TAG, "Pre-configured running");
@@ -357,6 +425,9 @@ public class HomeActivity extends AppCompatActivity {
         }
         return netID;
     }
+
+    //Need to request some permission on the location access (Coarse, Fine)
+    //Need to change so that it only uses one of those location methods
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
     {
