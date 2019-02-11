@@ -92,8 +92,6 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        Intent cintent = new Intent(this, ChatACtivity.class);
-        startActivity(cintent);
 
         //Creating our wifimanager object
         wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -153,6 +151,13 @@ public class HomeActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //Becomes a client and tries to connect to a host
                 startClientThread();
+
+                //Timer before new Chat Activity
+                SystemClock.sleep(10000);
+
+                Intent cintent = new Intent(getBaseContext(), ChatActivity.class);
+                startActivity(cintent);
+
             }
         });
 
@@ -161,6 +166,13 @@ public class HomeActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //Becomes a host
                 startHostThread();
+
+                //Timer before new Chat Activity
+                SystemClock.sleep(10000);
+
+                Intent cintent = new Intent(getBaseContext(), ChatActivity.class);
+                startActivity(cintent);
+
             }
         });
 
@@ -215,6 +227,7 @@ public class HomeActivity extends AppCompatActivity {
                     //listening to our connections
                     Thread hostthread = new Thread(new ServerClass(getApplicationContext(), wm));
                     hostthread.start();
+
 
                     //****    Refactoring this part    ****
 
@@ -602,73 +615,6 @@ public class HomeActivity extends AppCompatActivity {
                 + "." + ((i >> 24) & 0xFF));
     }
 
-
-    public void getClientList(FinishScanListener finishListener) {
-        getClientList(true, 300, finishListener);
-    }
-
-    /**
-     * Gets a list of the clients connected to the Hotspot
-     *
-     * @param onlyReachables   {@code false} if the list should contain unreachable (probably disconnected) clients, {@code true} otherwise
-     * @param reachableTimeout Reachable Timout in miliseconds
-     * @param finishListener,  Interface called when the scan method finishes
-     */
-    public void getClientList(final boolean onlyReachables, final int reachableTimeout, final FinishScanListener finishListener) {
-        Runnable runnable = new Runnable() {
-            public void run() {
-
-                BufferedReader br = null;
-                final ArrayList<ClientScanResult> result = new ArrayList<ClientScanResult>();
-
-                try {
-                    br = new BufferedReader(new FileReader("/proc/net/arp"));
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        String[] splitted = line.split(" +");
-
-                        if ((splitted != null) && (splitted.length >= 4)) {
-                            // Basic sanity check
-                            String mac = splitted[3];
-
-                            if (mac.matches("..:..:..:..:..:..")) {
-                                boolean isReachable = InetAddress.getByName(splitted[0]).isReachable(reachableTimeout);
-
-                                if (!onlyReachables || isReachable) {
-                                    result.add(new ClientScanResult(splitted[0], splitted[3], splitted[5], isReachable));
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    Log.d("address", e.toString());
-                } finally {
-                    try {
-                        br.close();
-                    } catch (IOException e) {
-                        Log.d("address", e.getMessage());
-                    }
-                }
-
-                // Get a handler that can be used to post to the main thread
-                Handler mainHandler = new Handler(getApplicationContext().getMainLooper());
-
-                Log.d("address", "error happens afer this");
-                Runnable myRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        for(ClientScanResult x: result)
-                        Log.d("address", "Hardware address: " + x.getHWAddr() + "  IP Address" + x.getIpAddr());
-
-                    }
-                };
-                mainHandler.post(myRunnable);
-            }
-        };
-
-        Thread mythread = new Thread(runnable);
-        mythread.start();
-    }
 
 //    public void getallconnected(){
 //        new Thread(new Runnable() {
