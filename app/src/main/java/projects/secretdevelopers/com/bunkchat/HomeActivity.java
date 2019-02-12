@@ -153,10 +153,21 @@ public class HomeActivity extends AppCompatActivity {
                 startClientThread();
 
                 //Timer before new Chat Activity
-                SystemClock.sleep(10000);
 
-                Intent cintent = new Intent(getBaseContext(), ChatActivity.class);
-                startActivity(cintent);
+//                boolean connected = false;
+//                while(!connected){
+//                    try{
+//                        String servaddress = intToIP(wm.getDhcpInfo().serverAddress);
+//                        Log.d("address", servaddress);
+//                        connected = (InetAddress.getByName(servaddress).isReachable(100));
+//                    }catch(Exception e){
+//                        Log.d("address", "Not connected yet");
+//                        SystemClock.sleep(1000);
+//                    }
+//
+//                }
+
+
 
             }
         });
@@ -168,10 +179,10 @@ public class HomeActivity extends AppCompatActivity {
                 startHostThread();
 
                 //Timer before new Chat Activity
-                SystemClock.sleep(10000);
-
-                Intent cintent = new Intent(getBaseContext(), ChatActivity.class);
-                startActivity(cintent);
+//                SystemClock.sleep(3000);
+//                Log.d("address", "starts new chatactivity from client");
+//                Intent cintent = new Intent(getApplicationContext(), ChatActivity.class);
+//                startActivity(cintent);
 
             }
         });
@@ -209,11 +220,15 @@ public class HomeActivity extends AppCompatActivity {
             public void run() {
                 Log.d("address", "enables hotspot");
                 wm.setWifiEnabled(false);
+                while(wm.isWifiEnabled()){
+                    SystemClock.sleep(1000);
+                }
                 boolean b = setHotSpot("abc", "12345678");
                 if(b){
 
                     //If a hotspot has been created
                     //Enable the host some way to to show that
+                    Looper.prepare();
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
@@ -221,12 +236,19 @@ public class HomeActivity extends AppCompatActivity {
                             tv.setText("Became a Server");
                         }
                     });
+
+                    Log.d("address", "starts new chatactivity from server");
+                    Intent cintent = new Intent(getApplicationContext(), ChatActivity.class);
+                    cintent.putExtra("SERVER", true);
+                    cintent.putExtra("username", message.getText().toString()==null?"":message.getText().toString());
+                    startActivity(cintent);
+
                     //****  -----Refactor Code (checked)----- ******
                     //Server works fine
                     //opens our port
                     //listening to our connections
-                    Thread hostthread = new Thread(new ServerClass(getApplicationContext(), wm));
-                    hostthread.start();
+//                    Thread hostthread = new Thread(new ServerClass(getApplicationContext(), wm));
+//                    hostthread.start();
 
 
                     //****    Refactoring this part    ****
@@ -274,7 +296,14 @@ public class HomeActivity extends AppCompatActivity {
                 if(!wm.isWifiEnabled()){
                     wm.setWifiEnabled(true);
                 }
+                while(!wm.isWifiEnabled()){
+                    SystemClock.sleep(1000);
+                }
                 boolean b  = connectToHotspot("abc", "12345678");
+                while(!b){
+                    connectToHotspot("abc", "12345678");
+                }
+                Log.d("address", "connected: "+b);
                 if(b){
 
                     //Simplest way i know to update the UI thread
@@ -293,9 +322,33 @@ public class HomeActivity extends AppCompatActivity {
                     ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
+//                    int x = wm.getConnectionInfo().getNetworkId();
+//
+//
+//
+//                    while(x == -1){
+//                        x = wm.getConnectionInfo().getNetworkId();
+//                        Log.d("address",""+wm.getConnectionInfo().getIpAddress());
+//                        SystemClock.sleep(1000);
+//                    }
 
+                    boolean connected = false;
+                    while(!connected){
+                        try{
+                            String servaddress = intToIP(wm.getDhcpInfo().serverAddress);
+                            Log.d("address", servaddress);
+                            connected = (InetAddress.getByName(servaddress).isReachable(100));
+                        }catch(Exception e){
+                            Log.d("address", "Not connected yet");
+                            SystemClock.sleep(1000);
+                        }
 
+                    }
 
+                    Intent cintent = new Intent(getApplicationContext(), ChatActivity.class);
+                    cintent.putExtra("SERVER", false);
+                    cintent.putExtra("username", message.getText().toString()==null?"":message.getText().toString());
+                    startActivity(cintent);
                     //------------------------------------------------
                     //This sleep method has a little significance
 
@@ -308,12 +361,11 @@ public class HomeActivity extends AppCompatActivity {
                     //This is still up for change
                     //Have to find a better way to couter this problem
 
-                    SystemClock.sleep(4000);
                     //------------------------------------------------------
 
                     //****  -----Refactor code(Not checked)---- *****
-                    Thread clientThread = new Thread(new ClientClass(getApplicationContext(), wm));
-                    clientThread.start();
+//                    Thread clientThread = new Thread(new ClientClass(getApplicationContext(), wm));
+//                    clientThread.start();
 
                     //Refactoring this code
 //                    ClientAsyncTask clientAST = new ClientAsyncTask();
@@ -341,6 +393,8 @@ public class HomeActivity extends AppCompatActivity {
 
     // Create a hotspot for our host/server
     public boolean setHotSpot(String SSID, String passWord) {
+        Log.d("address", "setting hotspot");
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         boolean apstatus = false;
         WifiConfiguration wifiCon = new WifiConfiguration();
         wifiCon.SSID = SSID;
@@ -352,14 +406,15 @@ public class HomeActivity extends AppCompatActivity {
         try
         {
             //Get the declared method named 'setWifiApEnabled' which has parameters of a WifiConfiguration object and a boolean
-            Method setWifiApMethod = wm.getClass().getDeclaredMethod("setWifiApEnabled", WifiConfiguration.class, Boolean.TYPE);
-            apstatus=(Boolean) setWifiApMethod.invoke(wm, wifiCon,true);
-            Log.d("address", "comes here2");
+            Method setWifiApMethod = wifiManager.getClass().getDeclaredMethod("setWifiApEnabled", WifiConfiguration.class, Boolean.TYPE);
+            apstatus=(Boolean) setWifiApMethod.invoke(wifiManager, wifiCon,true);
+            Log.d("address", "comes here2"+intToIP(wifiManager.getDhcpInfo().ipAddress));
         }
         catch (Exception e)
         {
             Log.d("address", "", e);
         }
+
         return apstatus;
 
     }
@@ -372,9 +427,9 @@ public class HomeActivity extends AppCompatActivity {
 
         //use wifimanager to get all the wifi routers/hotspots in the network
         scanResultList = wm.getScanResults();
-
         Log.d("address", "inside connect to hotspot");
         if (wm.isWifiEnabled()) {
+            Log.d("address", "inside is wifi enabled");
             for (ScanResult result : scanResultList) {
 
                 Log.d("address", ""+result.SSID);

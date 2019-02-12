@@ -1,6 +1,7 @@
 package projects.secretdevelopers.com.bunkchat;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -9,6 +10,7 @@ import android.os.SystemClock;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -21,7 +23,10 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -31,15 +36,22 @@ public class ChatActivity extends AppCompatActivity {
     ArrayList<ClientScanResult> Receiverlist;
     TextView incmessages;
     TextInputEditText writemess;
+    String username;
+    boolean isServer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        Log.d("address","comes on chatactivity");
         context = getApplicationContext();
         wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         Receiverlist = new ArrayList<>();
         incmessages = (TextView) findViewById(R.id.Messages);
+        incmessages.setMovementMethod(new ScrollingMovementMethod());
         writemess = (TextInputEditText) findViewById(R.id.messagebox);
+        isServer = getIntent().getBooleanExtra("SERVER", false);
+        username = getIntent().getStringExtra("username");
+        Log.d("address", ""+isServer);
     }
 
     @Override
@@ -47,15 +59,72 @@ public class ChatActivity extends AppCompatActivity {
 
         super.onStart();
 
-        //Find all the available connections on the network
-        updateAllReceivers();
 
+
+        //Find all the available connections on the network
+        //updateAllReceivers();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if(!isServer) {
+                    Log.d("address", "updating receiver list");
+                    sendhello();
+
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.d("address", "said hello to everyone");
+                            incmessages.setBackgroundColor(Color.argb(10, 20, 100, 125));
+                            incmessages.setText("Connected\n");
+                            incmessages.setBackgroundColor(Color.WHITE);
+                        }
+                    });
+                }
+                else{
+                    Log.d("address", "Server ready for listening");
+                }
+                Log.d("address", "Receiver list updated");
+                receiveconnections();
+            }
+        }).start();
+        Log.d("address","comes to receive connections");
         //Open a port and receive incoming messages
-        receiveconnections();
+
 
     }
 
+    public void sendhello(){
+        WifiManager tempWifiManager = wm;
+        int intIP = tempWifiManager.getDhcpInfo().serverAddress;
+        String mainIP =(intIP & 0xFF) + "." + ((intIP >> 8) & 0xFF) + "." + ((intIP >> 16) & 0xFF)
+                + ".";
+        String localIP = intToIP(wm.getConnectionInfo().getIpAddress());
+        if(localIP.equals("0.0.0.0")) localIP = intToIP(intIP);
+        ArrayList<ClientScanResult> tempReceiverList = new ArrayList<>();
+        for(int i = 0; i<=255; i++){
+            String currIP = mainIP + i;
 
+            if(!localIP.equals(currIP)){
+                try {
+                    Log.d("address", "trying for: "+currIP);
+                    if(InetAddress.getByName(currIP).isReachable(100) && isPortReachable(currIP, PORT)){
+                        tempReceiverList.add(new ClientScanResult(currIP, true));
+
+                        Log.d("address","found: "+currIP);
+                    }
+                } catch (Exception e) {
+                    Log.d("address", "updateRecieverlist: "+e);
+                }
+
+
+            }
+        }
+
+        Receiverlist = tempReceiverList;
+        SendMessAsyncTask clientAST = new SendMessAsyncTask();
+        clientAST.execute("Welcome me".toString());
+
+    }
 
 
     public void receiveconnections(){
@@ -65,36 +134,66 @@ public class ChatActivity extends AppCompatActivity {
                 try {
                     //Choosing a port for the conncetion
                     //Need to think of whether a static or dynamic port and how to manage them
+
                     ServerSocket servSocket = new ServerSocket(9809);
+
                     Socket client = null;
                     int connectionno = 0;
                     while (true) {
                         try {
-                            Log.d("address", "Waiting on clinet");
+                            Log.d("address", "Waiting on client");
                             client = servSocket.accept();
-                            Log.d("address", "Doing a thread for client no " + (++connectionno));
+
+                            Log.d("address", "Doing a thread for client no " + (++connectionno)+"  ip: "+client.getInetAddress()+"currentip: "+intToIP(wm.getDhcpInfo().ipAddress));
+                            addClient(client);
+                            Log.d("address", "done addclient stuff");
                             ServerAsyncTask serverAsyncTask = new ServerAsyncTask();
-                            serverAsyncTask.execute(new Socket[]{client});
+                            serverAsyncTask.execute(client);
                         } catch (Exception e) {
-                            Log.d("address", ""+e);
+                            Log.d("address", "inreciveconnections: "+e);
                         }
                     }
                 } catch (IOException e) {
-                    Log.d("address", ""+e);
+                    Log.d("address", "outreciveconnections: "+e);
                 }
             }
 
         });
         t.start();
     }
+    public void addClient(Socket... socket){
+        Log.d("address", "inside addclientk");
+        ArrayList<ClientScanResult> temprecievers = Receiverlist;
+        int port = PORT;
+        Socket sc = socket[0];
+        Log.d("address", "checking if socket already exists");
+        boolean found = false;
+        for(ClientScanResult x : temprecievers) {
+            if(x.getIpAddr().equals(sc.getInetAddress().toString().charAt(0)=='/'?sc.getInetAddress().toString().substring(1):sc.getInetAddress().toString())){
+                found = true;
+            }
+        }
+        if(!found) {
+            Receiverlist.add(new ClientScanResult(sc.getInetAddress().toString().charAt(0)=='/'?sc.getInetAddress().toString().substring(1):sc.getInetAddress().toString(), true));
+            Log.d("address", "Adding a new socket for " + (sc.getInetAddress().toString()));
 
+        }
+
+    }
     public void updateAllReceivers(){
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 while(true) {
+
+                    Log.d("address","trying to update list");
                     updateReceiverlist();
-                    SystemClock.sleep(5000);
+                    Log.d("address","receiver list updated");
+                    try {
+                        Thread.sleep(15000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
@@ -103,10 +202,16 @@ public class ChatActivity extends AppCompatActivity {
 
     public void sendMessageClick(View view) {
 
+        String header = username+":";
+        Date d =  Calendar.getInstance().getTime();
+        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
+        String footer = "\t\t"+ df.format(d);
+
         SendMessAsyncTask clientAST = new SendMessAsyncTask();
-        clientAST.execute(String.valueOf(writemess.getText()));
+        clientAST.execute(writemess.getText().toString());
+        incmessages.setText(incmessages.getText()+"\n"+header+writemess.getText()+footer);
+
         writemess.setText("");
-        incmessages.setText(incmessages.getText()+"\n"+writemess.getText());
 
     }
 
@@ -118,13 +223,24 @@ public class ChatActivity extends AppCompatActivity {
             int port = PORT;
             Socket socket;
             String result = null;
+            String header = username+":";
+            Date d =  Calendar.getInstance().getTime();
+            DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
+            String footer = "\t\t"+ df.format(d);
+
+            mess = header + mess + footer;
             String lines[] = mess.split("\r?\n");
+            Log.d("address", "sending message to all receivers");
 
             for(ClientScanResult x : temprecievers){
                 try {
-                    socket = new Socket(x.getIpAddr(), port);
-                    Log.d("address", "able to send to server: " + socket.isConnected());
-                    InputStream is = socket.getInputStream();
+
+                    Log.d("address", "trying to send to ip: " + x.getIpAddr());
+
+                    socket = new Socket(x.getIpAddr().charAt(0)=='/'? x.getIpAddr().substring(1):x.getIpAddr(), port);
+
+                    Log.d("address", "creating socket for ip: " + x.getIpAddr());
+
                     PrintWriter out = new PrintWriter(socket.getOutputStream(),
                             true);
 
@@ -133,8 +249,16 @@ public class ChatActivity extends AppCompatActivity {
                     }
                     socket.close();
                 } catch (Exception e) {
-                    Log.d("address", "" + e);
-                    SystemClock.sleep(1000);
+                    Log.d("address", "error sending message: " + e);
+//                    Receiverlist.remove(x);
+//                    int index = 0;
+//                    for(ClientScanResult y : temprecievers){
+//                        if(y.getIpAddr() == x.getIpAddr()){
+//                            Receiverlist.remove(index);
+//                            break;
+//                        }
+//                        index++;
+//                    }
                 }
             }
 
@@ -145,11 +269,41 @@ public class ChatActivity extends AppCompatActivity {
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
 
-
+            Log.d("address","message sent");
 
         }
     }
 
+    class AddClientAsyncTask extends AsyncTask<Socket, Void, String> {
+        @Override
+        protected String doInBackground(Socket... socket) {
+            Log.d("address", "inside addclientasynctask");
+            ArrayList<ClientScanResult> temprecievers = Receiverlist;
+            int port = PORT;
+            Socket sc = socket[0];
+            Log.d("address", "checking if socket already exists");
+            boolean found = false;
+            for(ClientScanResult x : temprecievers) {
+                if(x.getIpAddr().equals(sc.getInetAddress().toString())){
+                    found = true;
+                }
+            }
+            if(!found) {
+                Receiverlist.add(new ClientScanResult(sc.getInetAddress().toString(), true));
+                Log.d("address", "Adding a new socket for " + (sc.getInetAddress().toString()));
+
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+            Log.d("address","adding client finished");
+
+        }
+    }
 
 
     public void updateReceiverlist(){
@@ -158,16 +312,18 @@ public class ChatActivity extends AppCompatActivity {
         String mainIP =(intIP & 0xFF) + "." + ((intIP >> 8) & 0xFF) + "." + ((intIP >> 16) & 0xFF)
                 + ".";
         String localIP = intToIP(wm.getConnectionInfo().getIpAddress());
+        if(localIP.equals("0.0.0.0")) localIP = intToIP(intIP);
         ArrayList<ClientScanResult> tempReceiverList = new ArrayList<>();
         for(int i = 0; i<=255; i++){
             String currIP = mainIP + i;
-            if(localIP.equals(currIP)){
+            if(!localIP.equals(currIP)){
                 try {
-                    if(InetAddress.getByName(currIP).isReachable(1000) && isPortReachable(currIP, PORT)){
+                    if(InetAddress.getByName(currIP).isReachable(80) && isPortReachable(currIP, PORT)){
                         tempReceiverList.add(new ClientScanResult(currIP, true));
+                        Log.d("address","found: "+currIP);
                     }
-                } catch (IOException e) {
-                    Log.d("address", ""+e);
+                } catch (Exception e) {
+                    Log.d("address", "updateRecieverlist: "+e);
                 }
 
 
@@ -175,8 +331,12 @@ public class ChatActivity extends AppCompatActivity {
         }
 
         Receiverlist = tempReceiverList;
+        SendMessAsyncTask clientAST = new SendMessAsyncTask();
+        clientAST.execute("Welcome me".toString());
 
     }
+
+
 
     boolean isPortReachable(String inHost, int inPort) {
         Socket socket = null;
@@ -207,39 +367,38 @@ public class ChatActivity extends AppCompatActivity {
     class ServerAsyncTask extends AsyncTask<Socket, Void, String> {
         @Override
         protected String doInBackground(Socket... params) {
-            String result = null;
+            Log.d("address", "inside serverasync");
+            String main = "";
             Socket mySocket = params[0];
             try {
+                Log.d("address", "gets input stream in background for: "+mySocket.getInetAddress());
+                 InputStream is = mySocket.getInputStream();
 
-                InputStream is = mySocket.getInputStream();
-                PrintWriter out = new PrintWriter(mySocket.getOutputStream(),
-                        true);
-
-
-                BufferedReader br = new BufferedReader(
+                Log.d("address", "creates buffered reader in background"+mySocket.getInetAddress());
+                 BufferedReader br = new BufferedReader(
                         new InputStreamReader(is));
 
-
-
-                result = br.readLine();
-                while (!result.equals("")){
-
-                    result += br.readLine();
+                String result = br.readLine();
+                while (result != null && !result.equals("")){
+                    Log.d("address","Reading Lines");
+                    main += result;
+                    result = br.readLine();
                 }
 
                 //mySocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                Log.d("address", "serverasync: "+e);
             }
-            return result;
+            Log.d("address", "ends serverasync background");
+            return main;
         }
 
         @Override
         protected void onPostExecute(String s) {
 
             Log.d("UI thread", "I am the PO UI thread");
-            Log.d("", ""+s);
-            Looper.prepare();
+            Log.d("address", "onpostexecute: "+s);
+//            Looper.prepare();
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
