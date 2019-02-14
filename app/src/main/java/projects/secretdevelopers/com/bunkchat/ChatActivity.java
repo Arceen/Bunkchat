@@ -10,7 +10,10 @@ import android.os.SystemClock;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -24,6 +27,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -38,6 +42,7 @@ public class ChatActivity extends AppCompatActivity {
     TextInputEditText writemess;
     String username;
     boolean isServer;
+    ArrayList<int[]> myMessages, otherMessages;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +56,11 @@ public class ChatActivity extends AppCompatActivity {
         writemess = (TextInputEditText) findViewById(R.id.messagebox);
         isServer = getIntent().getBooleanExtra("SERVER", false);
         username = getIntent().getStringExtra("username");
+        otherMessages = new ArrayList<>();
+        myMessages = new ArrayList<>();
         Log.d("address", ""+isServer);
+        Log.d("address", ""+username);
+
     }
 
     @Override
@@ -122,7 +131,7 @@ public class ChatActivity extends AppCompatActivity {
 
         Receiverlist = tempReceiverList;
         SendMessAsyncTask clientAST = new SendMessAsyncTask();
-        clientAST.execute("Welcome me".toString());
+        clientAST.execute("Welcome "+username);
 
     }
 
@@ -203,13 +212,29 @@ public class ChatActivity extends AppCompatActivity {
     public void sendMessageClick(View view) {
 
         String header = username+":";
-        Date d =  Calendar.getInstance().getTime();
-        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
-        String footer = "\t\t"+ df.format(d);
+        Date date = new Date();
+
+        String strDateFormat = "hh:mm:ss a";
+
+        DateFormat dateFormat = new SimpleDateFormat(strDateFormat);
+
+        String formattedDate= dateFormat.format(date);
+        String footer = "\t\t"+ formattedDate;
 
         SendMessAsyncTask clientAST = new SendMessAsyncTask();
-        clientAST.execute(writemess.getText().toString());
-        incmessages.setText(incmessages.getText()+"\n"+header+writemess.getText()+footer);
+        clientAST.execute(header+writemess.getText().toString()+footer);
+
+        String text = incmessages.getText().toString()+"\n"+header+writemess.getText().toString()+footer;
+
+        Spannable spannable = new SpannableString(text);
+        int start = incmessages.getText().toString().length(), finish = incmessages.getText().toString().length()+username.length() + 1;
+        myMessages.add(new int[]{start, finish});
+        for(int[] x: myMessages){
+            spannable.setSpan(new ForegroundColorSpan(Color.RED), x[0], x[1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+
+        incmessages.setText(spannable);
 
         writemess.setText("");
 
@@ -222,13 +247,18 @@ public class ChatActivity extends AppCompatActivity {
             ArrayList<ClientScanResult> temprecievers = Receiverlist;
             int port = PORT;
             Socket socket;
-            String result = null;
-            String header = username+":";
-            Date d =  Calendar.getInstance().getTime();
-            DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
-            String footer = "\t\t"+ df.format(d);
-
-            mess = header + mess + footer;
+//            String result = null;
+//            String header = username+":";
+//            Date date = new Date();
+//
+//            String strDateFormat = "hh:mm:ss a";
+//
+//            DateFormat dateFormat = new SimpleDateFormat(strDateFormat);
+//
+//            String formattedDate= dateFormat.format(date);
+//            String footer = "\t\t"+ dateFormat.format(formattedDate);
+//
+//            mess = header + mess + footer;
             String lines[] = mess.split("\r?\n");
             Log.d("address", "sending message to all receivers");
 
@@ -332,7 +362,7 @@ public class ChatActivity extends AppCompatActivity {
 
         Receiverlist = tempReceiverList;
         SendMessAsyncTask clientAST = new SendMessAsyncTask();
-        clientAST.execute("Welcome me".toString());
+        clientAST.execute("Welcome "+username);
 
     }
 
@@ -403,7 +433,17 @@ public class ChatActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     Log.d("address", "updating client connection");
-                    incmessages.setText(incmessages.getText()+"\n"+s);
+
+                    String text = incmessages.getText().toString()+"\n"+s;
+
+                    Spannable spannable = new SpannableString(text);
+
+                    for(int[] x: myMessages){
+                        spannable.setSpan(new ForegroundColorSpan(Color.RED), x[0], x[1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+
+                    incmessages.setText(spannable);
+
                 }
             });
 
