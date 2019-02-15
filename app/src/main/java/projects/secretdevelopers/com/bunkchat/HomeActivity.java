@@ -135,7 +135,7 @@ public class HomeActivity extends AppCompatActivity {
             //Request permission
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.ACCESS_FINE_LOCATION,},
+                            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.RECORD_AUDIO},
                     123);
 
 
@@ -240,7 +240,8 @@ public class HomeActivity extends AppCompatActivity {
                     Log.d("address", "starts new chatactivity from server");
                     Intent cintent = new Intent(getApplicationContext(), ChatActivity.class);
                     cintent.putExtra("SERVER", true);
-                    cintent.putExtra("username", message.getText().toString()==null?"":message.getText().toString());
+                    cintent.putExtra("username", message.getText().toString().equals("")?"Anonymous":message.getText().toString());
+
                     startActivity(cintent);
 
                     //****  -----Refactor Code (checked)----- ******
@@ -347,7 +348,7 @@ public class HomeActivity extends AppCompatActivity {
 
                     Intent cintent = new Intent(getApplicationContext(), ChatActivity.class);
                     cintent.putExtra("SERVER", false);
-                    cintent.putExtra("username", message.getText().toString()==null?"":message.getText().toString());
+                    cintent.putExtra("username", message.getText().toString().equals("")?"Anonymous":message.getText().toString());
                     startActivity(cintent);
                     //------------------------------------------------
                     //This sleep method has a little significance
