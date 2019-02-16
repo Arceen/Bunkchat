@@ -52,6 +52,8 @@ public class ChatActivity extends AppCompatActivity {
     PowerManager pm;
     PowerManager.WakeLock wl;
     int userColor;
+    boolean serverAck;
+    boolean doneServ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,15 +67,19 @@ public class ChatActivity extends AppCompatActivity {
         writemess = (TextInputEditText) findViewById(R.id.messagebox);
         isServer = getIntent().getBooleanExtra("SERVER", false);
         username = getIntent().getStringExtra("username");
+        userColor = getIntent().getIntExtra("usercolor", 123);
         otherMessages = new ArrayList<>();
         myMessages = new ArrayList<>();
+        serverAck = false;
+        doneServ = true;
+        Log.d("address", ""+userColor);
         Log.d("address", ""+isServer);
         Log.d("address", ""+username);
 
         pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "Dontfallasleepwhilechatting");
 
-        userColor = Color.RED;
+
     }
 
     @Override
@@ -85,32 +91,23 @@ public class ChatActivity extends AppCompatActivity {
 
         //Find all the available connections on the network
         //updateAllReceivers();
+        //update receivers and listen
         new Thread(new Runnable() {
             @Override
             public void run() {
                 if(!isServer) {
-                    Log.d("address", "updating receiver list");
-                    sendhello();
-
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.d("address", "said hello to everyone");
-                            incmessages.setBackgroundColor(Color.argb(10, 20, 100, 125));
-                            incmessages.setText("Connected\n");
-                            incmessages.setBackgroundColor(Color.WHITE);
-                        }
-                    });
+                    Log.d("address", "clients updating receiver list by asking the server.");
+                    sendHelloServer();
+                    Log.d("address", "done updating client list");
                 }
                 else{
-                    Log.d("address", "Server ready for listening");
+                    Log.d("address", "This is the Server");
                 }
-                Log.d("address", "Receiver list updated");
+                Log.d("address", "receiveconnections start");
                 receiveconnections();
+
             }
         }).start();
-        Log.d("address","comes to receive connections");
-        //Open a port and receive incoming messages
 
 
     }
@@ -137,37 +134,60 @@ public class ChatActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    public void sendhello(){
+    public void sendHelloServer(){
         WifiManager tempWifiManager = wm;
-        int intIP = tempWifiManager.getDhcpInfo().serverAddress;
-        String mainIP =(intIP & 0xFF) + "." + ((intIP >> 8) & 0xFF) + "." + ((intIP >> 16) & 0xFF)
-                + ".";
-        String localIP = intToIP(wm.getConnectionInfo().getIpAddress());
-        if(localIP.equals("0.0.0.0")) localIP = intToIP(intIP);
-        ArrayList<ClientScanResult> tempReceiverList = new ArrayList<>();
-        for(int i = 0; i<=255; i++){
-            String currIP = mainIP + i;
+        String servIP = intToIP(tempWifiManager.getDhcpInfo().serverAddress);
+        Receiverlist.add(new ClientScanResult(servIP, true));
 
-            if(!localIP.equals(currIP)){
-                try {
-                    Log.d("address", "trying for: "+currIP);
-                    if(InetAddress.getByName(currIP).isReachable(100) && isPortReachable(currIP, PORT)){
-                        tempReceiverList.add(new ClientScanResult(currIP, true));
+//        ArrayList<ClientScanResult> tempReceiverList = new ArrayList<>();
+        //Request message
+        try {
+            Log.d("address", "sending hello to server: "+servIP);
+            SendMessAsyncTaskobj clientAST = new SendMessAsyncTaskobj();
 
-                        Log.d("address","found: "+currIP);
-                    }
-                } catch (Exception e) {
-                    Log.d("address", "updateRecieverlist: "+e);
+            Message newMessage = new Message(1);
+
+            clientAST.execute(newMessage);
+
+            Log.d("address","sent request message to server");
+
+        } catch (Exception e) {
+            Log.d("address", "sendHelloServer request: "+e);
+        }
+        try{
+            Log.d("address", "Waiting for server Response");
+            Log.d("address", "created a server socket");
+            ServerSocket servSocket = new ServerSocket(9809);
+            Socket client = null;
+            while(true){
+                client = servSocket.accept();
+                doneServ = false;
+                ServerAsyncTaskobj serverAsyncTaskobj = new ServerAsyncTaskobj();
+                serverAsyncTaskobj.execute(client);
+                while(!doneServ){
+                    Thread.sleep(500);
                 }
+                Log.d("address", "done server service");
+                if(serverAck) break;
 
+            }
+            servSocket.close();
 
+            Log.d("address", "closed the server socket");
+
+        }catch(Exception e){
+            Log.d("address", "sendHelloServer response:"+e);
+        }
+        ArrayList<ClientScanResult> tempreceivers = Receiverlist;
+        for(ClientScanResult x: tempreceivers){
+            if(x.getIpAddr().equals(intToIP(wm.getConnectionInfo().getIpAddress()))){
+                Receiverlist.remove(x);
             }
         }
 
-        Receiverlist = tempReceiverList;
         SendMessAsyncTaskobj clientAST = new SendMessAsyncTaskobj();
         String text = "Hello "+username;
-        Message newMessage = new Message(0, username, new Date(),userColor, "safsadfsafsadfsaf");
+        Message newMessage = new Message(0, username, new Date(),userColor);
         newMessage.setTextMessage(text);
         clientAST.execute(newMessage);
 
@@ -183,6 +203,7 @@ public class ChatActivity extends AppCompatActivity {
                     //Choosing a port for the conncetion
                     //Need to think of whether a static or dynamic port and how to manage them
 
+                    Log.d("address", "created a server socket");
                     ServerSocket servSocket = new ServerSocket(9809);
 
                     Socket client = null;
@@ -298,7 +319,7 @@ public class ChatActivity extends AppCompatActivity {
         int start = incmessages.getText().toString().length(), finish = incmessages.getText().toString().length()+username.length() + 1;
         myMessages.add(new int[]{start, finish});
         for(int[] x: myMessages){
-            spannable.setSpan(new ForegroundColorSpan(Color.RED), x[0], x[1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new ForegroundColorSpan(userColor), x[0], x[1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 
 
@@ -310,7 +331,8 @@ public class ChatActivity extends AppCompatActivity {
         //Sending using objectstream method
 
         //Creating the message
-        Message newMessage = new Message(0, username, new Date(),userColor, messText);
+        Log.d("address", "trying to send message click");
+        Message newMessage = new Message(0, username, new Date(),userColor);
         newMessage.setTextMessage(messText);
         SendMessAsyncTaskobj clientASTobj = new SendMessAsyncTaskobj();
         clientASTobj.execute(newMessage);
@@ -495,7 +517,7 @@ public class ChatActivity extends AppCompatActivity {
 
         Receiverlist = tempReceiverList;
         String messText = writemess.getText().toString();
-        Message newMessage = new Message(0, username, new Date(),userColor, messText);
+        Message newMessage = new Message(0, username, new Date(),userColor);
         newMessage.setTextMessage(messText);
         SendMessAsyncTaskobj clientAST = new SendMessAsyncTaskobj();
         clientAST.execute(newMessage);
@@ -687,11 +709,15 @@ public class ChatActivity extends AppCompatActivity {
             if(message == null) return;
             Log.d("UI thread", "I am the PO UI thread");
             Log.d("address", "onpostexecuteserverobj   :   "+message.getTextMessage());
-//            Looper.prepare();
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d("address", "updating client connection");
+            Log.d("address", ""+message.getMessType());
+            //Check type of message
+            if(message.getMessType() == 0) {
+
+                //Looper.prepare();
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d("address", "updating client : "+ message.getTextMessage());
 //
 //                    String text = incmessages.getText().toString()+"\n"+s;
 //
@@ -701,10 +727,28 @@ public class ChatActivity extends AppCompatActivity {
 //                        spannable.setSpan(new ForegroundColorSpan(Color.RED), x[0], x[1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 //                    }
 
-                    incmessages.setText(incmessages.getText().toString()+"\n"+message.getSender()+" : "+message.getTextMessage()+"  "+message.getFormattedDate());
+                        incmessages.setText(incmessages.getText().toString() + "\n" + message.getSender() + " : " + message.getTextMessage() + "  " + message.getFormattedDate());
+                        Log.d("address","done updating UI");
+                    }
+                });
+            }
+            else if(message.getMessType() == 1){
+                //Send the Server's receiverlist to client
+                Log.d("address","Sending server list to the client");
+                SendMessAsyncTaskobj clientAST = new SendMessAsyncTaskobj();
 
-                }
-            });
+                Message newMessage = new Message(2, Receiverlist);
+
+                clientAST.execute(newMessage);
+            }
+            else if(message.getMessType() == 2){
+                //Get the response receiverlist from server
+                Log.d("address","using the response to update our receiverlist");
+                Receiverlist = message.getReceiverList();
+                Log.d("address","done receiving the list from server");
+                serverAck = true;
+            }
+            doneServ = true;
 
         }
     }

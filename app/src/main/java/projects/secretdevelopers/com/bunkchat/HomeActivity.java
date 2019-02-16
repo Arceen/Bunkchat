@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
 import android.net.NetworkInfo;
@@ -21,6 +22,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -30,8 +32,10 @@ import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -65,6 +69,7 @@ public class HomeActivity extends AppCompatActivity {
     WifiManager wm;
     IntentFilter mIntentFilter;
     Intent intent;
+    int color;
     WifiP2pManager wp2p;
     EditText message;
     WifiP2pManager.Channel mChannel;
@@ -76,6 +81,55 @@ public class HomeActivity extends AppCompatActivity {
     boolean abletosend = false;
     boolean abletorecieve = false;
     ArrayList<ClientScanResult> allclients = null;
+
+    public void orangeSelected(View view) {
+        color = Color.argb(0,44,255,44);
+        ImageView col = (ImageView)view;
+        int height = col.getLayoutParams().height;
+        int width = col.getLayoutParams().width;
+        ViewGroup.LayoutParams params = col.getLayoutParams();
+        params.height = 170;
+        params.width = 170;
+        col.setLayoutParams(params);
+        changeallothers(R.id.green_icon,R.id.blue_icon,  height,width);
+    }
+    public void blueSelected(View view) {
+        color = Color.BLUE;
+        ImageView col = (ImageView)view;
+        int height = col.getLayoutParams().height;
+        int width = col.getLayoutParams().width;
+        ViewGroup.LayoutParams params = col.getLayoutParams();
+        params.height = 170;
+        params.width = 170;
+        col.setLayoutParams(params);
+        changeallothers(R.id.red_icon,R.id.green_icon, height,width);
+    }
+    public void greenSelected(View view) {
+        Log.d("address","comes here at keast");
+        color = Color.GREEN;
+        ImageView col = (ImageView)view;
+        int height = col.getLayoutParams().height;
+        int width = col.getLayoutParams().width;
+        ViewGroup.LayoutParams params = col.getLayoutParams();
+        params.height = 170;
+        params.width = 170;
+        col.setLayoutParams(params);
+        changeallothers(R.id.red_icon,R.id.blue_icon,  height,width);
+
+    }
+    public void changeallothers(int id1,int id2,  int height, int width){
+        ViewGroup.LayoutParams params1 = findViewById(id1).getLayoutParams();
+        ViewGroup.LayoutParams params2 = findViewById(id2).getLayoutParams();
+        params1.width = width;
+        params1.height = height;
+        params2.width = width;
+        params2.height = height;
+        findViewById(id1).setLayoutParams(params1);
+        findViewById(id2).setLayoutParams(params2);
+
+
+    }
+
     class fc implements FinishScanListener{
 
         String s = "";
@@ -241,7 +295,7 @@ public class HomeActivity extends AppCompatActivity {
                     Intent cintent = new Intent(getApplicationContext(), ChatActivity.class);
                     cintent.putExtra("SERVER", true);
                     cintent.putExtra("username", message.getText().toString().equals("")?"Anonymous":message.getText().toString());
-
+                    cintent.putExtra("usercolor", color);
                     startActivity(cintent);
 
                     //****  -----Refactor Code (checked)----- ******
@@ -349,6 +403,7 @@ public class HomeActivity extends AppCompatActivity {
                     Intent cintent = new Intent(getApplicationContext(), ChatActivity.class);
                     cintent.putExtra("SERVER", false);
                     cintent.putExtra("username", message.getText().toString().equals("")?"Anonymous":message.getText().toString());
+                    cintent.putExtra("usercolor", color);
                     startActivity(cintent);
                     //------------------------------------------------
                     //This sleep method has a little significance

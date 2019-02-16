@@ -46,10 +46,77 @@
             />
     </LinearLayout>
 
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/colors"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/green_icon"
+            android:layout_width="wrap_content"
+
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/circleshape"
+            android:backgroundTint="@color/green"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/blue_icon"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:onClick="greenSelected"
+            />
+
+        <ImageView
+            android:id="@+id/red_icon"
+            android:layout_width="wrap_content"
+
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/circleshape"
+            android:backgroundTint="@color/orange"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/blue_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            android:onClick="orangeSelected"
+
+
+            />
+
+        <ImageView
+            android:id="@+id/blue_icon"
+            android:layout_width="wrap_content"
+
+            android:layout_height="wrap_content"
+            android:background="@drawable/circleshape"
+            android:backgroundTint="@color/blue"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            android:onClick="blueSelected"
+            />
+
+
+    </android.support.constraint.ConstraintLayout>
     <EditText
+        android:hint="Your Name"
         android:id="@+id/mess"
         android:backgroundTint="@color/colorAccent"
-        android:layout_below="@id/connectedbox"
+        android:layout_below="@id/colors"
         android:layout_marginTop="40dp"
         android:layout_width="match_parent"
         android:layout_height="80dp"
