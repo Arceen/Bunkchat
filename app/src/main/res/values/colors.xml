@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#ee0290</color>
+    <color name="colorPrimaryDark">#C2185B</color>
+    <color name="colorAccent">#df55f2</color>
+    <color name="colorSecondary">#ee6002</color>
     <color name="orange">#f75</color>
     <color name="blue">#45f</color>
     <color name="green">#3fa</color>
-
+    <color name="buttoncyan">#FF7336</color>
+    <color name="mymessagestroke">#224C00</color>
+    <color name="mymessagecolor">#9FA838</color>
 </resources>

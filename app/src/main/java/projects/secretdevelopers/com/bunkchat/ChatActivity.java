@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -338,6 +339,35 @@ public class ChatActivity extends AppCompatActivity {
         clientASTobj.execute(newMessage);
 
     }
+
+    public void opencloseemojis(View view) {
+        ConstraintLayout emojilayout = (ConstraintLayout) findViewById(R.id.emojis);
+        if(emojilayout.getVisibility() == View.GONE){
+            emojilayout.setVisibility(View.VISIBLE);
+        }
+        else{
+            emojilayout.setVisibility(View.GONE);
+        }
+
+    }
+
+    public void sleepingemoji(View view) {
+    }
+
+    public void happyemoji(View view) {
+
+    }
+    public void angryemoji(View view) {
+    }
+
+    public void sademoji(View view) {
+    }
+    public void laughingemoji(View view) {
+    }
+
+    public void boredemoji(View view) {
+    }
+
 
     class SendMessAsyncTaskobj extends AsyncTask<Message, Void, String>{
         @Override
@@ -757,32 +787,32 @@ public class ChatActivity extends AppCompatActivity {
 
 
 }
-
-class SendMessage implements Runnable {
-
-    //check to see if it is a global message
-    boolean sendglobalmess;
-    boolean ip;
-
-    SendMessage(boolean sendglobalmess){
-        this.sendglobalmess = sendglobalmess;
-    }
-
-    @Override
-    public void run() {
-
-    }
-}
-
-class ReceiveMessage implements Runnable {
-
-    ReceiveMessage(){
-
-    }
-
-    @Override
-    public void run() {
-        //listen for incoming messages
-
-    }
-}
+//
+//class SendMessage implements Runnable {
+//
+//    //check to see if it is a global message
+//    boolean sendglobalmess;
+//    boolean ip;
+//
+//    SendMessage(boolean sendglobalmess){
+//        this.sendglobalmess = sendglobalmess;
+//    }
+//
+//    @Override
+//    public void run() {
+//
+//    }
+//}
+//
+//class ReceiveMessage implements Runnable {
+//
+//    ReceiveMessage(){
+//
+//    }
+//
+//    @Override
+//    public void run() {
+//        //listen for incoming messages
+//
+//    }
+//}

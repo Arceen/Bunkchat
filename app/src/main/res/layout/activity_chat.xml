@@ -7,20 +7,18 @@
     tools:context=".ChatActivity">
 
     <android.support.design.widget.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_marginEnd="65dp"
         android:id="@+id/text"
-        android:layout_marginRight="100dp"
+        android:layout_width="match_parent"
         android:layout_height="65dp"
+        android:layout_marginEnd="65dp"
+        android:layout_marginRight="100dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/messagebox"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:textSize="30dp"
-            />
-
+            android:textSize="30dp" />
 
 
     </android.support.design.widget.TextInputLayout>
@@ -29,12 +27,13 @@
         android:id="@+id/emote"
         android:layout_width="35dp"
         android:layout_height="35dp"
-        app:layout_constraintEnd_toEndOf="@id/text"
-        app:srcCompat="@drawable/happy"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="13dp"
         android:layout_marginEnd="10dp"
         android:layout_marginRight="13dp"
-        android:layout_marginBottom="13dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/text"
+        app:srcCompat="@drawable/happy"
+        android:onClick="opencloseemojis"
 
         />
 
@@ -43,11 +42,12 @@
         android:layout_width="63dp"
         android:layout_height="60dp"
 
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-
-        app:srcCompat="@drawable/sendingicon"
         android:onClick="sendMessageClick"
+        app:layout_constraintBottom_toBottomOf="parent"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/sendingicon"
+
         />
 
     <TextView
@@ -68,28 +68,155 @@
         app:layout_constraintStart_toStartOf="parent"
 
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.0"
+        android:visibility="visible"
+        />
 
-    <TextView
+    <!--<ScrollView-->
+        <!--android:id="@+id/Messages1"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:layout_marginBottom="70dp"-->
+        <!--android:layout_marginEnd="8dp"-->
+        <!--android:layout_marginLeft="8dp"-->
+        <!--android:layout_marginRight="8dp"-->
+        <!--android:layout_marginStart="8dp"-->
+        <!--android:layout_marginTop="8dp"-->
 
-        android:id="@+id/Connected"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="70dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginStart="200dp"
-        android:layout_marginTop="8dp"
+        <!--app:layout_constraintBottom_toTopOf="@+id/text"-->
+        <!--app:layout_constraintHorizontal_bias="0.0"-->
+        <!--app:layout_constraintStart_toStartOf="parent"-->
+
+        <!--app:layout_constraintTop_toTopOf="parent"-->
+        <!--app:layout_constraintVertical_bias="0.0">-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="Your Messages"-->
+            <!--android:textSize="20dp"-->
+            <!--android:textAlignment="center"-->
+            <!--android:background="@drawable/messageshape"-->
+            <!--android:layout_gravity="end"-->
+            <!--android:layout_margin="3dp"-->
+            <!--android:padding="5dp"-->
+            <!--/>-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="My Messages"-->
+            <!--android:textSize="20dp"-->
+            <!--android:textAlignment="center"-->
+            <!--android:background="@drawable/othermessage"-->
+            <!--android:layout_gravity="start"-->
+            <!--android:layout_margin="3dp"-->
+            <!--android:padding="5dp"-->
+            <!--/>-->
+    <!--</ScrollView>-->
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/emojis"
         android:visibility="gone"
-        android:text="ONLINE"
-        android:textStyle="bold"
-        android:textSize="22dp"
-        app:layout_constraintBottom_toTopOf="@+id/text"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginBottom="64dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+
+        <ImageView
+            android:id="@+id/angry"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/happy"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.533"
+            app:srcCompat="@drawable/angry"
+            android:onClick="angryemoji"
+            />
+
+        <ImageView
+            android:id="@+id/bored"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/laughing"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.533"
+            app:srcCompat="@drawable/bored"
+            android:onClick="boredemoji"
+            />
+
+        <ImageView
+            android:id="@+id/laughing"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/sad"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toEndOf="@+id/bored"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.533"
+            app:srcCompat="@drawable/laughing_1"
+            android:onClick="laughingemoji"
+            />
+
+        <ImageView
+            android:id="@+id/sad"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/sleeping"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toEndOf="@+id/laughing"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.533"
+            app:srcCompat="@drawable/sad_1"
+            android:onClick="sademoji"
+            />
+
+        <ImageView
+            android:id="@+id/sleeping"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/happy"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toEndOf="@+id/sad"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.533"
+            app:srcCompat="@drawable/sleepy"
+            android:onClick="sleepingemoji"
+            />
+
+        <ImageView
+            android:id="@+id/happy"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/angry"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toEndOf="@+id/sleeping"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.533"
+            app:srcCompat="@drawable/happy"
+            android:onClick="happyemoji"
+            />
+
+
+    </android.support.constraint.ConstraintLayout>
 
 </android.support.constraint.ConstraintLayout>

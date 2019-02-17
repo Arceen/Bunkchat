@@ -1,51 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+
     xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".HomeActivity"
+    >
+    <LinearLayout
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        >
+<RelativeLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HomeActivity">
 
-    <TextView
-        android:layout_marginTop="30dp"
-        android:id="@+id/connectedbox"
-        android:layout_width="198dp"
-        android:layout_height="wrap_content"
-        android:text="Placeholder"
-        android:textSize="30dp"
-        android:textAlignment="center"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/linear1"
-        android:scrollbars="vertical"
-        />
+    >
 
-    <LinearLayout
+
+    <android.support.constraint.ConstraintLayout
         android:id="@+id/linear1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
         >
 
         <Button
             android:id="@+id/hostbutt"
             android:layout_width="wrap_content"
-            android:layout_height="70dp"
+            android:layout_height="60dp"
             android:layout_margin="20dp"
-            android:layout_weight="1"
+            android:background="@drawable/button"
+            android:backgroundTint="@color/buttoncyan"
+            android:textAlignment="center"
             android:text="Host"
-
-            />
+            android:shadowColor="@color/colorPrimaryDark"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/space"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/clientbutt"
             android:layout_width="wrap_content"
-            android:layout_height="70dp"
-            android:text="Client"
-            android:layout_weight="1"
-
+            android:layout_height="60dp"
             android:layout_margin="20dp"
-            />
-    </LinearLayout>
+            android:background="@drawable/button"
+            android:backgroundTint="@color/buttoncyan"
+            android:textAlignment="center"
+            android:text="Client"
 
+            android:shadowColor="@color/colorPrimaryDark"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/space"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Space
+            android:id="@+id/space"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            />
+    </android.support.constraint.ConstraintLayout>
+
+
+    <TextView
+        android:layout_marginTop="30dp"
+        android:id="@+id/connectedbox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select A Color"
+        android:textStyle="italic"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="28dp"
+
+        android:textAlignment="center"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/linear1"
+        android:scrollbars="vertical"
+        />
     <android.support.constraint.ConstraintLayout
         android:id="@+id/colors"
         android:layout_width="match_parent"
@@ -53,7 +94,12 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_below="@id/connectedbox"
+        android:layout_marginTop="35dp"
+        >
+
+
 
         <ImageView
             android:id="@+id/green_icon"
@@ -115,22 +161,34 @@
     <EditText
         android:hint="Your Name"
         android:id="@+id/mess"
-        android:backgroundTint="@color/colorAccent"
-        android:layout_below="@id/colors"
+        android:background="@drawable/textviewshape"
+        android:layout_marginBottom="0dp"
         android:layout_marginTop="40dp"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_centerHorizontal="true"
         android:ems="10"
-        android:inputType="textMultiLine" />
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_below="@id/colors"
+        />
 
     <Button
         android:id="@+id/sendmess"
-        android:layout_width="148dp"
-        android:layout_height="65dp"
+
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_margin="20dp"
+        android:background="@drawable/button"
+
+        android:backgroundTint="@color/buttoncyan"
+        android:textAlignment="center"
+        android:layout_marginBottom="10dp"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/mess"
-        android:text="send"
+        android:text="Set All"
         />
 
 </RelativeLayout>
+    </LinearLayout>
+</ScrollView>

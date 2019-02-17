@@ -20,9 +20,25 @@ import java.io.Serializable;
 
 public class ClientScanResult  implements Serializable{
     private String IpAddr;
-    private String HWAddr;
-    private String Device;
     private boolean isReachable;
+    private String clientName;
+    private int clientColor;
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
+
+    public int getClientColor() {
+        return clientColor;
+    }
+
+    public void setClientColor(int clientColor) {
+        this.clientColor = clientColor;
+    }
 
     public ClientScanResult(String ipAddr, boolean isReachable) {
         super();
@@ -36,22 +52,6 @@ public class ClientScanResult  implements Serializable{
 
     public void setIpAddr(String ipAddr) {
         IpAddr = ipAddr;
-    }
-
-    public String getHWAddr() {
-        return HWAddr;
-    }
-
-    public void setHWAddr(String hWAddr) {
-        HWAddr = hWAddr;
-    }
-
-    public String getDevice() {
-        return Device;
-    }
-
-    public void setDevice(String device) {
-        Device = device;
     }
 
     public boolean isReachable() {
