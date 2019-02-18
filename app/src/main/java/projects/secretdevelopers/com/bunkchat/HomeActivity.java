@@ -1,6 +1,8 @@
 package projects.secretdevelopers.com.bunkchat;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -60,6 +62,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.Permission;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -388,16 +391,25 @@ public class HomeActivity extends AppCompatActivity {
 //                    }
 
                     boolean connected = false;
+                    long currtime = System.currentTimeMillis();
+
                     while(!connected){
+                        long now = System.currentTimeMillis();
+                        if((now-currtime)/1000 > 8){
+                            Intent intent = getIntent();
+                            finish();
+                            startActivity(intent);
+                            Toast.makeText(getApplicationContext(),"4 secs apsses", Toast.LENGTH_LONG).show();
+                        }
                         try{
-                            String servaddress = intToIP(wm.getDhcpInfo().serverAddress);
+                            String servaddress = intToIP(((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE)).getDhcpInfo().serverAddress);
                             Log.d("address", servaddress);
                             connected = (InetAddress.getByName(servaddress).isReachable(100));
                         }catch(Exception e){
                             Log.d("address", "Not connected yet");
-                            SystemClock.sleep(1000);
-                        }
 
+                        }
+                        SystemClock.sleep(1000);
                     }
 
                     Intent cintent = new Intent(getApplicationContext(), ChatActivity.class);

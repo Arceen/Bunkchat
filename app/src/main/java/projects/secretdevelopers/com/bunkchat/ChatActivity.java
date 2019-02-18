@@ -17,9 +17,15 @@ import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +37,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.DateFormat;
@@ -46,6 +53,7 @@ public class ChatActivity extends AppCompatActivity {
     int PORT = 9809;
     ArrayList<ClientScanResult> Receiverlist;
     TextView incmessages;
+    LinearLayout messagescroller;
     TextInputEditText writemess;
     String username;
     boolean isServer;
@@ -55,6 +63,7 @@ public class ChatActivity extends AppCompatActivity {
     int userColor;
     boolean serverAck;
     boolean doneServ;
+    ScrollView sv;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,8 +72,9 @@ public class ChatActivity extends AppCompatActivity {
         context = getApplicationContext();
         wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         Receiverlist = new ArrayList<>();
-        incmessages = (TextView) findViewById(R.id.Messages);
-        incmessages.setMovementMethod(new ScrollingMovementMethod());
+//        incmessages = (TextView) findViewById(R.id.Messages);
+//        incmessages.setMovementMethod(new ScrollingMovementMethod());
+        messagescroller = (LinearLayout)findViewById(R.id.MessagesScroll);
         writemess = (TextInputEditText) findViewById(R.id.messagebox);
         isServer = getIntent().getBooleanExtra("SERVER", false);
         username = getIntent().getStringExtra("username");
@@ -76,7 +86,7 @@ public class ChatActivity extends AppCompatActivity {
         Log.d("address", ""+userColor);
         Log.d("address", ""+isServer);
         Log.d("address", ""+username);
-
+        sv = (ScrollView) findViewById(R.id.MessagesScroller);
         pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "Dontfallasleepwhilechatting");
 
@@ -85,7 +95,12 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-
+        sv.post(new Runnable() {
+            @Override
+            public void run() {
+                sv.fullScroll(View.FOCUS_DOWN);
+            }
+        });
         super.onStart();
         wl.acquire();
 
@@ -109,7 +124,7 @@ public class ChatActivity extends AppCompatActivity {
 
             }
         }).start();
-
+//
 
     }
 
@@ -158,7 +173,9 @@ public class ChatActivity extends AppCompatActivity {
         try{
             Log.d("address", "Waiting for server Response");
             Log.d("address", "created a server socket");
-            ServerSocket servSocket = new ServerSocket(9809);
+            ServerSocket servSocket = new ServerSocket();
+            servSocket.setReuseAddress(true);
+            servSocket.bind(new InetSocketAddress("locathost",9809));
             Socket client = null;
             while(true){
                 client = servSocket.accept();
@@ -204,10 +221,11 @@ public class ChatActivity extends AppCompatActivity {
                     //Choosing a port for the conncetion
                     //Need to think of whether a static or dynamic port and how to manage them
 
-                    Log.d("address", "created a server socket");
-                    ServerSocket servSocket = new ServerSocket(9809);
-
+                    ServerSocket servSocket = new ServerSocket();
+                    servSocket.setReuseAddress(true);
+                    servSocket.bind(new InetSocketAddress("locathost",9809));
                     Socket client = null;
+
                     int connectionno = 0;
                     while (true) {
                         try {
@@ -309,26 +327,49 @@ public class ChatActivity extends AppCompatActivity {
         DateFormat dateFormat = new SimpleDateFormat(strDateFormat);
 
         String formattedDate= dateFormat.format(date);
-        String footer = "\t\t"+ formattedDate;
+//        String footer = "\t\t"+ formattedDate;
+////
+////        SendMessAsyncTask clientAST = new SendMessAsyncTask();
+////        clientAST.execute(header+writemess.getText().toString()+footer);
 //
-//        SendMessAsyncTask clientAST = new SendMessAsyncTask();
-//        clientAST.execute(header+writemess.getText().toString()+footer);
-
-        String text = incmessages.getText().toString()+"\n"+header+writemess.getText().toString()+footer;
-
-        Spannable spannable = new SpannableString(text);
-        int start = incmessages.getText().toString().length(), finish = incmessages.getText().toString().length()+username.length() + 1;
-        myMessages.add(new int[]{start, finish});
-        for(int[] x: myMessages){
-            spannable.setSpan(new ForegroundColorSpan(userColor), x[0], x[1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-
+//        String text = incmessages.getText().toString()+"\n"+header+writemess.getText().toString()+footer;
+//
+//        Spannable spannable = new SpannableString(text);
+//        int start = incmessage.getText().toString().length(), finish = incmessages.getText().toString().length()+username.length() + 1;
+//        myMessages.add(new int[]{start, finish});
+//        for(int[] x: myMessages){
+//            spannable.setSpan(new ForegroundColorSpan(userColor), x[0], x[1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//        }
+//
+//
+//        incmessages.setText(spannable);
         String messText = writemess.getText().toString();
-        incmessages.setText(spannable);
 
         writemess.setText("");
+        //Putting text on a TextView with a messageshape background
+        //and pushing them into the vertical oriented LinearLayout
+        //inside scrollview
+        LinearLayout ll1 = new LinearLayout(getApplicationContext());
 
+        ll1.setOrientation(LinearLayout.VERTICAL);
+        ll1.setGravity(Gravity.END);
+        ll1.setGravity(Gravity.RIGHT);
+        TextView myMessage = new TextView(getApplicationContext());
+        myMessage.setText(messText);
+        TextView myMessageDet = new TextView(getApplicationContext());
+        myMessageDet.setText(username+" at "+formattedDate);
+        myMessageDet.setTextSize(13);
+        myMessageDet.setTextColor(Color.BLACK);
+        myMessageDet.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+
+        myMessage.setBackgroundResource(R.drawable.messageshape);
+        myMessage.setTextSize(20);
+        myMessage.setTextColor(Color.BLACK);
+        myMessage.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+        ll1.setPadding(5,8,5,5);
+        ll1.addView(myMessageDet);
+        ll1.addView(myMessage);
+        messagescroller.addView(ll1);
         //Sending using objectstream method
 
         //Creating the message
@@ -352,20 +393,68 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     public void sleepingemoji(View view) {
+        emojiwork("sleepingemoji", R.drawable.sleepy);
+
+    }
+
+    public void emojiwork(String name, int id){
+        SendMessAsyncTaskobj clientAST = new SendMessAsyncTaskobj();
+        String text = name;
+        Message newMessage = new Message(4, username, new Date(),userColor);
+        newMessage.setTextMessage(text);
+        clientAST.execute(newMessage);
+
+
+        Date date = new Date();
+
+        String strDateFormat = "hh:mm:ss a";
+
+        DateFormat dateFormat = new SimpleDateFormat(strDateFormat);
+
+        String formattedDate= dateFormat.format(date);
+        LinearLayout ll1 = new LinearLayout(getApplicationContext());
+        ll1.setOrientation(LinearLayout.VERTICAL);
+        ll1.setGravity(Gravity.START);
+        ll1.setGravity(Gravity.LEFT);
+        ImageView img = new ImageView(getApplicationContext());
+        TextView myMessageDet = new TextView(getApplicationContext());
+        myMessageDet.setText(username+" at "+formattedDate);
+        myMessageDet.setTextSize(13);
+        myMessageDet.setTextColor(Color.BLACK);
+        myMessageDet.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+        img.setImageResource(id);
+
+        img.setLayoutParams(new FrameLayout.LayoutParams(100, 100));
+        ll1.setPadding(20,15,5,5);
+        ll1.addView(myMessageDet);
+        ll1.addView(img);
+        messagescroller.addView(ll1);
+
     }
 
     public void happyemoji(View view) {
 
+        emojiwork("happyemoji", R.drawable.happy);
+
+
     }
     public void angryemoji(View view) {
+
+        emojiwork("angryemoji", R.drawable.angry);
     }
 
     public void sademoji(View view) {
+
+        emojiwork("sademoji", R.drawable.sad_1);
     }
     public void laughingemoji(View view) {
+
+        emojiwork("laughingemoji", R.drawable.laughing_1);
     }
 
     public void boredemoji(View view) {
+
+        emojiwork("boredemoji", R.drawable.bored);
     }
 
 
@@ -757,8 +846,30 @@ public class ChatActivity extends AppCompatActivity {
 //                        spannable.setSpan(new ForegroundColorSpan(Color.RED), x[0], x[1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 //                    }
 
-                        incmessages.setText(incmessages.getText().toString() + "\n" + message.getSender() + " : " + message.getTextMessage() + "  " + message.getFormattedDate());
-                        Log.d("address","done updating UI");
+//                        incmessages.setText(incmessages.getText().toString() + "\n" + message.getSender() + " : " + message.getTextMessage() + "  " + message.getFormattedDate());
+//                        Log.d("address","done updating UI");
+//
+                        LinearLayout ll1 = new LinearLayout(getApplicationContext());
+
+                        ll1.setOrientation(LinearLayout.VERTICAL);
+                        ll1.setGravity(Gravity.START);
+                        ll1.setGravity(Gravity.LEFT);
+                        TextView myMessage = new TextView(getApplicationContext());
+                        myMessage.setText(message.getTextMessage());
+                        TextView myMessageDet = new TextView(getApplicationContext());
+                        myMessageDet.setText(message.getSender()+" at "+message.getFormattedDate());
+                        myMessageDet.setTextSize(13);
+                        myMessageDet.setTextColor(Color.BLACK);
+                        myMessageDet.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+
+                        myMessage.setBackgroundResource(R.drawable.othermessage);
+                        myMessage.setTextSize(20);
+                        myMessage.setTextColor(Color.BLACK);
+                        myMessage.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+                        ll1.setPadding(5,8,5,5);
+                        ll1.addView(myMessageDet);
+                        ll1.addView(myMessage);
+                        messagescroller.addView(ll1);
                     }
                 });
             }
@@ -777,6 +888,60 @@ public class ChatActivity extends AppCompatActivity {
                 Receiverlist = message.getReceiverList();
                 Log.d("address","done receiving the list from server");
                 serverAck = true;
+            }
+            else if(message.getMessType() == 4){
+                //Emoji message received
+                //Show it to user
+                Log.d("address","using the response to update our receiverlist");
+                LinearLayout ll1 = new LinearLayout(getApplicationContext());
+
+                ll1.setOrientation(LinearLayout.VERTICAL);
+                ll1.setGravity(Gravity.START);
+                ll1.setGravity(Gravity.LEFT);
+                ImageView img = new ImageView(getApplicationContext());
+                switch(message.getTextMessage()){
+                    case "happyemoji":
+                        img.setImageResource(R.drawable.happy);
+                        break;
+
+                    case "angryemoji":
+                        img.setImageResource(R.drawable.angry);
+                        break;
+
+
+                    case "sademoji":
+                        img.setImageResource(R.drawable.sad_1);
+                        break;
+
+                    case "laughingemoji":
+                        img.setImageResource(R.drawable.laughing_1);
+                        break;
+                    case "boredemoji":
+                        img.setImageResource(R.drawable.bored);
+                        break;
+
+                    case "sleepingemoji":
+                        img.setImageResource(R.drawable.sleepy);
+                        break;
+
+                    default:
+                        img.setImageResource(R.drawable.happy);
+
+                }
+
+                TextView myMessageDet = new TextView(getApplicationContext());
+                myMessageDet.setText(message.getSender()+" at "+message.getFormattedDate());
+                myMessageDet.setTextSize(13);
+                myMessageDet.setTextColor(Color.BLACK);
+                myMessageDet.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+
+
+                img.setLayoutParams(new FrameLayout.LayoutParams(100, 100));
+                ll1.setPadding(20,15,5,5);
+                ll1.addView(myMessageDet);
+                ll1.addView(img);
+                messagescroller.addView(ll1);
+
             }
             doneServ = true;
 

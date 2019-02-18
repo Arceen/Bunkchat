@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class Message implements Serializable{
-    //Message type: 0 for text message, 1 for hello, 2 for acknowledgement, 3 for other byte formats
+    //Message type: 0 for text message, 1 for hello, 2 for acknowledgement, 3 for emojis, 4 for other byte formats
     private int messType;
     private String sender;
     private String textMessage;
