@@ -29,6 +29,7 @@ import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
@@ -87,6 +88,8 @@ public class HomeActivity extends AppCompatActivity {
 
     public void orangeSelected(View view) {
         color = Color.argb(0,44,255,44);
+
+        color = ResourcesCompat.getColor(getResources(), R.color.orange, null);
         ImageView col = (ImageView)view;
         int height = col.getLayoutParams().height;
         int width = col.getLayoutParams().width;
@@ -98,6 +101,7 @@ public class HomeActivity extends AppCompatActivity {
     }
     public void blueSelected(View view) {
         color = Color.BLUE;
+        color = ResourcesCompat.getColor(getResources(), R.color.blue, null);
         ImageView col = (ImageView)view;
         int height = col.getLayoutParams().height;
         int width = col.getLayoutParams().width;
@@ -110,6 +114,8 @@ public class HomeActivity extends AppCompatActivity {
     public void greenSelected(View view) {
         Log.d("address","comes here at keast");
         color = Color.GREEN;
+
+        color = ResourcesCompat.getColor(getResources(), R.color.green, null);
         ImageView col = (ImageView)view;
         int height = col.getLayoutParams().height;
         int width = col.getLayoutParams().width;
