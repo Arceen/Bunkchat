@@ -3,7 +3,7 @@
 # Info
 Android app that enables people to chat via only their wi-fi(In Progress)
 One phone needs to be the host, the others will be client.
-Everyone is be able to chat with eachother.
+Everyone is able to chat with eachother.
 
 # Feature Status
 Most of the features have been implemented.
